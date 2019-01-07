@@ -15,7 +15,7 @@ function extractProfile(profile) {
 	};
 }
 
-module.exports = function(passport) {
+module.exports = function (passport) {
 	// console.log('Google: ', process.env.GOOGLE_CLIENT_ID);
 
 	passport.use(
@@ -23,11 +23,11 @@ module.exports = function(passport) {
 			{
 				clientID: process.env.GOOGLE_CLIENT_ID,
 				clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-				//callbackURL: process.env.baseURL + process.env.GOOGLE_CALLBACK_URL,
+				callbackURL: process.env.baseURL + process.env.GOOGLE_CALLBACK_URL,
 				accessType: 'offline',
 				passReqToCallback: true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
 			},
-			function(req, accessToken, refreshToken, profile, done) {
+			function (req, accessToken, refreshToken, profile, done) {
 				// console.log('Extracted profile info: ', extractProfile(profile));
 				// check if the user is already logged in
 				if (profile) {
@@ -38,7 +38,7 @@ module.exports = function(passport) {
 								{ 'local.email': profile.emails[0].value.toLowerCase() }
 							]
 						},
-						function(err, user) {
+						function (err, user) {
 							if (err) return done(err);
 							console.log('Found user: ', user);
 
@@ -53,7 +53,7 @@ module.exports = function(passport) {
 									user.google.email = (profile.emails[0].value || '')
 										.toLowerCase(); // pull the first email
 
-									user.save(function(err) {
+									user.save(function (err) {
 										if (err) return done(err);
 
 										return done(null, user);
@@ -71,7 +71,7 @@ module.exports = function(passport) {
 									.toLowerCase(); // pull the first email
 								newUser.name = profile.displayName;
 
-								newUser.save(function(err) {
+								newUser.save(function (err) {
 									if (err) return done(err);
 
 									return done(null, newUser);
@@ -82,7 +82,7 @@ module.exports = function(passport) {
 				} else {
 					// user already exists and is logged in, we have to link accounts
 					// var user = req.user; // pull the user out of the session
-					User.findOne({ 'google.id': profile.id }, function(err, googleUser) {
+					User.findOne({ 'google.id': profile.id }, function (err, googleUser) {
 						if (err) return done(err);
 						// check if this google account is already in use, if it exists, don't link account
 						if (googleUser) {

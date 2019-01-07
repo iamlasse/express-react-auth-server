@@ -37,7 +37,7 @@ router.get('/me', passport.authenticate('jwt'), (req, res, next) => {
 	return res.json({ user: extractUserInfo(user), authenticated: req.isAuthenticated() });
 });
 
-router.post('/change_password', isLoggedIn, function(req, res, next) {
+router.post('/change_password', isLoggedIn, function (req, res, next) {
 	var user = req.user;
 	// checking if don't have current local password or provided password is valid
 	if (!user.local.password || user.validPassword(req.body.oldPassword)) {
@@ -66,19 +66,19 @@ router.post('/change_password', isLoggedIn, function(req, res, next) {
 	}
 });
 
-router.post('/delete_account', isLoggedIn, function(req, res, next) {
-	User.findById(req.user._id, function(err, user) {
+router.post('/delete_account', isLoggedIn, function (req, res, next) {
+	User.findById(req.user._id, function (err, user) {
 		if (err) {
 			return res.json({ success: false, status: err });
 		}
 		if (!user.local.password) {
 			res.statusCode = 401;
 			res.setHeader('Content-Type', 'application/json');
-			return res.json({ success: false, status: "You don't have password." });
+			return res.json({ success: false, status: 'You don\'t have password.' });
 		}
 		// checking if provided password is valid
 		if (user.validPassword(req.body.password)) {
-			User.findByIdAndRemove(req.user._id, function(err, user) {
+			User.findByIdAndRemove(req.user._id, function (err, user) {
 				if (err) {
 					return res.json({ success: false, status: err });
 				}
@@ -95,9 +95,9 @@ router.post('/delete_account', isLoggedIn, function(req, res, next) {
 	});
 });
 
-router.post('/change_email', isLoggedIn, function(req, res, next) {
+router.post('/change_email', isLoggedIn, function (req, res, next) {
 	// checking if provided email already in use
-	User.findOne({ 'local.email': req.body.email }, function(err, user) {
+	User.findOne({ 'local.email': req.body.email }, function (err, user) {
 		if (err) {
 			console.log(err);
 			return next(err);
@@ -112,7 +112,7 @@ router.post('/change_email', isLoggedIn, function(req, res, next) {
 			});
 		}
 
-		User.findById(req.user._id, function(err, user) {
+		User.findById(req.user._id, function (err, user) {
 			if (err) {
 				return res.json({ success: false, status: err });
 			}
@@ -137,14 +137,14 @@ router.post('/change_email', isLoggedIn, function(req, res, next) {
 	});
 });
 
-router.post('/signup', function(req, res, next) {
-	passport.authenticate('local-signup', function(err, user, info) {
+router.post('/signup', function (req, res, next) {
+	passport.authenticate('local-signup', function (err, user, info) {
 		if (err) {
 			console.log(err);
 			return next(err);
 		}
 		if (user) {
-			req.logIn(user, function(err) {
+			req.logIn(user, function (err) {
 				if (err) {
 					return next(err);
 				}
@@ -161,14 +161,14 @@ router.post('/signup', function(req, res, next) {
 	})(req, res, next);
 });
 
-router.post('/signin', function(req, res, next) {
-	passport.authenticate('local-login', function(err, user, info) {
+router.post('/signin', function (req, res, next) {
+	passport.authenticate('local-login', function (err, user, info) {
 		if (err) {
 			console.log(err);
 			return next(err);
 		}
 		if (user) {
-			req.login(user, function(err) {
+			req.login(user, function (err) {
 				if (err) {
 					console.log(err);
 					return next(err);
@@ -222,14 +222,14 @@ router.get(
 
 // handle the callback after facebook has authenticated the user
 
-router.get('/facebook/callback', function(req, res, next) {
-	passport.authenticate('facebook', function(err, user, info) {
+router.get('/facebook/callback', function (req, res, next) {
+	passport.authenticate('facebook', function (err, user, info) {
 		if (err) {
 			console.log(err);
 			return next(err);
 		}
 		if (user) {
-			req.logIn(user, function(err) {
+			req.logIn(user, function (err) {
 				if (err) {
 					console.log('error when logging in');
 					return next(err);
@@ -264,17 +264,16 @@ router.get(
 );
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 async function verify(token) {
 	const payload = await client.getTokenInfo(token);
-	const userid = payload['sub'];
-	return { userid, payload };
+	const userId = payload['sub'];
+	return { userId, payload };
 }
 
-router.post('/google', async function(req, res, next) {
+router.post('/google', async function (req, res) {
 	try {
-		const { userid, payload } = await verify(req.body.access_token);
-
-		console.log('Found user: ', payload);
+		const { userId, payload } = await verify(req.body.access_token);
 		const user = await User.findOneAndUpdate(
 			{
 				$or: [
@@ -283,29 +282,26 @@ router.post('/google', async function(req, res, next) {
 				]
 			},
 			{
-				'google.token': payload.token,
-				'google.id': payload.id,
+				'google.token': req.body.access_token,
+				'google.id': userId,
 				lastLoggedIn: new Date()
 			},
 			{ upsert: true }
 		);
-		console.log('Found user: ', user);
-
 		if (user) return res.json({ user: user.toAuthJSON() });
-		console.log('Verified google request: ', payload);
 	} catch (error) {
-		console.error(error);
+		return res.status(500).json(error)
 	}
 });
 
-router.get('/google/callback', function(req, res, next) {
-	passport.authenticate('google', function(err, user, info) {
+router.get('/google/callback', function (req, res, next) {
+	passport.authenticate('google', function (err, user, info) {
 		if (err) {
 			console.log(err);
 			return next(err);
 		}
 		if (user) {
-			req.login(user, function(err) {
+			req.login(user, function (err) {
 				if (err) {
 					console.log('error when logging in');
 					return next(err);

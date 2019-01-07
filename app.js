@@ -59,12 +59,12 @@ app.use('/api', routes);
 // app.use('/users', passport.authenticate('jwt', { session: false }), usersRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
 	next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
 	console.log('Error handled from route: ', JSON.stringify(err));
 
 	// set locals, only providing error in development
@@ -78,11 +78,11 @@ app.use(function(err, req, res, next) {
 
 mongoose.connect(db.getDbConnectionString(), { useNewUrlParser: true });
 
-mongoose.connection.on('connection', function() {
+mongoose.connection.on('connection', function () {
 	console.log('Mongo connected');
 });
 
-mongoose.connection.on('error', function(error) {
+mongoose.connection.on('error', function (error) {
 	console.error('Mongoose connection error: ', error);
 });
 
