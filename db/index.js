@@ -7,11 +7,11 @@ const dbPwd = process.env.DB_PWD || '';
 /* ================================ EXPORTS ================================ */
 
 module.exports = {
-	getDbConnectionString: function() {
+	getDbConnectionString: function () {
 		// live database
-		return `mongodb://localhost/auth_app`;
+		// return `mongodb://localhost:8081/auth_app`;
 
 		// test database
-		//        return `mongodb://${dbUname}:${dbPwd}@ds161503.mlab.com:61503/co-ment-test`;
+		return 'mongodb://localhost:27017/auth_app';
 	}
 };
